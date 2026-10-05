@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Dr. Aditya Ayurveda Clinic</title>
+  
+  <!-- Styling & Typography -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: '#0B3B2E',
+            emerald: '#145C48',
+            gold: '#C9A45C',
+            ivory: '#F7F3EA',
+            beige: '#EDE5D5',
+            charcoal: '#202723',
+            muted: '#52635B'
+          },
+          fontFamily: {
+            serif: ['Playfair Display', 'serif'],
+            display: ['Cinzel', 'serif'],
+            sans: ['Plus Jakarta Sans', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #F7F3EA;
+      color: #202723;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #F7F3EA;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #C9A45C;
+      border-radius: 4px;
+    }
+  </style>
+
+  <!-- ======================================================== -->
+  <!-- FIREBASE SDK (Compat Mode v9.23.0)                       -->
+  <!-- ======================================================== -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+</head>
+<body class="min-h-screen bg-[#F7F3EA] text-[#202723] font-sans antialiased flex flex-col selection:bg-[#C9A45C]/30 selection:text-[#0B3B2E]">
+
+  <!-- ======================================================== -->
+  <!-- AUTHENTICATION GUARD OVERLAY                             -->
+  <!-- Visible while Firebase Authentication state resolves     -->
+  <!-- ======================================================== -->
+  <div id="auth-guard-overlay" class="fixed inset-0 z-50 bg-[#F7F3EA] flex flex-col items-center justify-center p-4 transition-opacity duration-300">
+    <div class="flex flex-col items-center space-y-4 max-w-sm text-center">
+      <div class="relative w-16 h-16 rounded-full bg-[#0B3B2E] text-[#C9A45C] flex items-center justify-center font-serif text-xl font-bold shadow-lg border border-[#C9A45C]/40">
+        <span>DA</span>
+        <div class="absolute inset-0 rounded-full border-2 border-[#C9A45C] border-t-transparent animate-spin"></div>
+      </div>
+      <div>
+        <h2 class="font-serif text-lg font-bold text-[#0B3B2E]">Dr. Aditya Ayurveda</h2>
+        <p class="text-xs uppercase tracking-widest text-[#C9A45C] font-semibold mt-0.5">Admin Management Portal</p>
+      </div>
+      <p class="text-xs text-[#52635B] animate-pulse">Authenticating Portal Access...</p>
+    </div>
+  </div>
+
+  <!-- Top Global Mobile Bar -->
+  <header class="lg:hidden bg-white border-b border-[#C9A45C]/25 px-4 py-3 sticky top-0 z-40 flex items-center justify-between">
+    <div class="flex items-center space-x-2.5">
+      <div class="w-8 h-8 rounded-full bg-[#0B3B2E] text-white flex items-center justify-center font-serif font-bold text-xs">
+        DA
+      </div>
+      <div>
+        <div class="font-serif font-bold text-sm text-[#0B3B2E]">Dr. Aditya Ayurveda</div>
+        <div class="text-[10px] text-[#C9A45C] font-semibold uppercase tracking-wider">Admin Portal</div>
+      </div>
+    </div>
+    <button id="mobile-menu-toggle" aria-label="Open mobile menu" class="p-2 rounded-lg text-[#0B3B2E] hover:bg-[#EDE5D5]/50 focus:outline-none">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </header>
+
+  <div class="flex-1 flex flex-row relative">
+    <!-- Desktop Left Sidebar -->
+    <aside id="admin-sidebar" class="hidden lg:flex flex-col w-64 bg-white border-r border-[#C9A45C]/25 shrink-0 min-h-screen">
+      <!-- Clinic Brand -->
+      <div class="p-6 border-b border-[#EDE5D5]">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-full bg-[#0B3B2E] text-[#C9A45C] flex items-center justify-center font-serif font-bold text-sm shadow-sm">
+            DA
+          </div>
+          <div>
+            <h2 class="font-serif font-bold text-sm text-[#0B3B2E] leading-tight">Dr. Aditya Ayurveda</h2>
+            <p class="text-[10px] text-[#C9A45C] font-semibold uppercase tracking-wider mt-0.5">Admin Management</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="flex-1 p-4 space-y-1.5">
+        <a href="dashboard.html" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl bg-[#0B3B2E] text-[#F7F3EA] font-semibold text-xs transition-all shadow-sm">
+          <svg class="w-4 h-4 text-[#C9A45C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="appointments.html" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-[#0B3B2E] hover:bg-[#EDE5D5]/50 font-medium text-xs transition-colors">
+          <svg class="w-4 h-4 text-[#52635B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <span>Appointments</span>
+        </a>
+        <a href="patients.html" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-[#0B3B2E] hover:bg-[#EDE5D5]/50 font-medium text-xs transition-colors">
+          <svg class="w-4 h-4 text-[#52635B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <span>Patients</span>
+        </a>
+        <a href="settings.html" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-[#0B3B2E] hover:bg-[#EDE5D5]/50 font-medium text-xs transition-colors">
+          <svg class="w-4 h-4 text-[#52635B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <!-- Sidebar Footer Doctor Badge & Logout -->
+      <div class="p-4 border-t border-[#EDE5D5] space-y-3">
+        <div class="flex items-center space-x-2.5">
+          <div id="desktop-doctor-avatar" class="w-8 h-8 rounded-full bg-[#EDE5D5] text-[#0B3B2E] flex items-center justify-center font-serif text-xs font-semibold">
+            AS
+          </div>
+          <div class="overflow-hidden">
+            <div id="desktop-doctor-name" class="text-xs font-bold text-[#0B3B2E] truncate">Dr. Aditya N. Shinde</div>
+            <div id="desktop-doctor-role" class="text-[10px] text-[#52635B]">BAMS Doctor</div>
+          </div>
+        </div>
+        <button type="button" id="sidebar-logout-btn" class="w-full flex items-center space-x-2 text-[11px] font-semibold text-[#52635B] hover:text-red-700 transition-colors pt-1 text-left focus:outline-none">
+          <svg class="w-3.5 h-3.5 text-[#52635B] group-hover:text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Mobile Drawer Overlay -->
+    <div id="mobile-drawer" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden lg:hidden">
+      <div class="w-72 max-w-full bg-white h-full shadow-2xl flex flex-col p-6 space-y-6">
+        <div class="flex items-center justify-between pb-4 border-b border-[#EDE5D5]">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-full bg-[#0B3B2E] text-white flex items-center justify-center font-serif font-bold text-xs">
+              DA
+            </div>
+            <div>
+              <div class="font-serif font-bold text-sm text-[#0B3B2E]">Dr. Aditya Ayurveda</div>
+              <div class="text-[10px] text-[#C9A45C] font-semibold uppercase">Admin Portal</div>
+            </div>
+          </div>
+          <button id="mobile-menu-close" aria-label="Close mobile menu" class="p-1.5 rounded-lg text-[#52635B] hover:bg-[#EDE5D5]/50">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <nav class="space-y-1 text-sm font-medium">
+          <a href="dashboard.html" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl bg-[#0B3B2E] text-white font-semibold">
+            <span>Dashboard</span>
+          </a>
+          <a href="appointments.html" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-[#0B3B2E] hover:bg-[#EDE5D5]/50">
+            <span>Appointments</span>
+          </a>
+          <a href="patients.html" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-[#0B3B2E] hover:bg-[#EDE5D5]/50">
+            <span>Patients</span>
+          </a>
+          <a href="settings.html" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-[#0B3B2E] hover:bg-[#EDE5D5]/50">
+            <span>Settings</span>
+          </a>
+          <button type="button" id="mobile-logout-btn" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-red-700 hover:bg-red-50 pt-4 font-semibold text-left">
+            <span>Sign Out</span>
+          </button>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col overflow-y-auto">
+      <!-- Top Bar inside Dashboard -->
+      <div class="bg-white/80 backdrop-blur-md border-b border-[#C9A45C]/20 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 class="font-serif text-xl sm:text-2xl font-bold text-[#0B3B2E]">Clinic Overview</h1>
+          <p id="topbar-welcome-text" class="text-xs text-[#52635B] mt-0.5">Welcome, Dr. Aditya Navnath Shinde</p>
+        </div>
+
+        <div class="flex items-center space-x-3 text-xs">
+          <div class="px-3 py-1.5 rounded-lg bg-[#EDE5D5]/50 border border-[#C9A45C]/30 text-[#0B3B2E] font-medium flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span id="session-status-text">Firebase Active Session</span>
+          </div>
+          <a href="appointments.html" class="px-3.5 py-1.5 rounded-lg bg-[#C9A45C] hover:bg-[#0B3B2E] text-[#0B3B2E] hover:text-[#F7F3EA] font-semibold transition-all shadow-sm">
+            Manage Appointments
+          </a>
+        </div>
+      </div>
+
+      <!-- Dashboard Body -->
+      <div class="p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
+
+        <!-- Welcome Banner -->
+        <section class="bg-gradient-to-r from-[#0B3B2E] to-[#145C48] rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden shadow-lg border border-[#C9A45C]/30">
+          <div class="relative z-10 max-w-2xl">
+            <span class="inline-block px-3 py-1 rounded-full text-[11px] font-semibold bg-[#C9A45C]/25 text-[#F7F3EA] border border-[#C9A45C]/40 mb-3 tracking-wide">
+              Ayurveda Clinic Administration
+            </span>
+            <h2 id="banner-greeting" class="font-serif text-2xl sm:text-3xl font-bold tracking-tight">Good morning, Dr. Aditya</h2>
+            <p class="text-xs sm:text-sm text-[#F7F3EA]/90 mt-2 leading-relaxed">
+              Here is your clinic overview. When patients book through the website or send enquiries, their verified requests will be tracked here in real time.
+            </p>
+          </div>
+          <div class="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 pointer-events-none flex items-center justify-end pr-6">
+            <svg class="w-64 h-64 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z"/></svg>
+          </div>
+        </section>
+
+        <!-- Zero-State Statistics Row -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="dashboard-stats">
+          <!-- Stat 1: Today's Appointments -->
+          <div class="bg-white rounded-xl p-5 border border-[#C9A45C]/25 shadow-sm hover:border-[#C9A45C] transition-all">
+            <div class="flex items-center justify-between text-[#52635B] mb-2">
+              <span class="text-xs font-semibold text-[#0B3B2E]">Today's Appointments</span>
+              <div class="w-7 h-7 rounded-lg bg-[#EDE5D5]/60 flex items-center justify-center text-[#0B3B2E]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </div>
+            </div>
+            <div class="text-2xl sm:text-3xl font-serif font-bold text-[#0B3B2E]" id="today-appointments-count">0</div>
+            <p class="text-[11px] text-[#52635B] mt-1">Scheduled for today</p>
+          </div>
+
+          <!-- Stat 2: Pending Requests -->
+          <div class="bg-white rounded-xl p-5 border border-[#C9A45C]/25 shadow-sm hover:border-[#C9A45C] transition-all">
+            <div class="flex items-center justify-between text-[#52635B] mb-2">
+              <span class="text-xs font-semibold text-[#0B3B2E]">Pending Requests</span>
+              <div class="w-7 h-7 rounded-lg bg-[#C9A45C]/15 flex items-center justify-center text-[#C9A45C]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+            </div>
+            <div class="text-2xl sm:text-3xl font-serif font-bold text-[#0B3B2E]" id="pending-count">0</div>
+            <p class="text-[11px] text-[#52635B] mt-1">Awaiting triage confirmation</p>
+          </div>
+
+          <!-- Stat 3: Patients -->
+          <div class="bg-white rounded-xl p-5 border border-[#C9A45C]/25 shadow-sm hover:border-[#C9A45C] transition-all">
+            <div class="flex items-center justify-between text-[#52635B] mb-2">
+              <span class="text-xs font-semibold text-[#0B3B2E]">Patients</span>
+              <div class="w-7 h-7 rounded-lg bg-[#EDE5D5]/60 flex items-center justify-center text-[#0B3B2E]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              </div>
+            </div>
+            <div class="text-2xl sm:text-3xl font-serif font-bold text-[#0B3B2E]" id="patient-count">0</div>
+            <p class="text-[11px] text-[#52635B] mt-1">Registered clinic patients</p>
+          </div>
+
+          <!-- Stat 4: New Enquiries -->
+          <div class="bg-white rounded-xl p-5 border border-[#C9A45C]/25 shadow-sm hover:border-[#C9A45C] transition-all">
+            <div class="flex items-center justify-between text-[#52635B] mb-2">
+              <span class="text-xs font-semibold text-[#0B3B2E]">New Enquiries</span>
+              <div class="w-7 h-7 rounded-lg bg-[#EDE5D5]/60 flex items-center justify-center text-[#0B3B2E]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+              </div>
+            </div>
+            <div class="text-2xl sm:text-3xl font-serif font-bold text-[#0B3B2E]" id="enquiry-count">0</div>
+            <p class="text-[11px] text-[#52635B] mt-1">Website & WhatsApp inquiries</p>
+          </div>
+        </section>
+
+        <!-- Two Columns: Today's Appointments & Recent Enquiries (Clean Zero States) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          <!-- Left Column (Span 2): Today's Appointments Clean Zero State -->
+          <div class="lg:col-span-2 bg-white rounded-2xl border border-[#C9A45C]/25 shadow-sm overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-[#EDE5D5] flex items-center justify-between">
+              <div>
+                <h3 class="font-serif font-bold text-base text-[#0B3B2E]">Today's Appointments</h3>
+                <p class="text-xs text-[#52635B] mt-0.5">Live roster for OPD and tele-health sessions</p>
+              </div>
+              <a href="appointments.html" class="text-xs font-semibold text-[#C9A45C] hover:text-[#0B3B2E] transition-colors">
+                View Ledger &rarr;
+              </a>
+            </div>
+
+            <!-- Zero State Container -->
+            <div class="p-8 sm:p-12 flex-1 flex flex-col items-center justify-center text-center">
+              <div class="w-16 h-16 rounded-full bg-[#F7F3EA] border border-[#C9A45C]/30 flex items-center justify-center text-[#52635B] mb-4">
+                <svg class="w-8 h-8 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <h4 class="font-serif text-lg font-bold text-[#0B3B2E]">No appointments yet</h4>
+              <p class="text-xs text-[#52635B] max-w-sm mt-1.5 leading-relaxed">
+                When patients schedule appointments via the online booking wizard, their clinical intake dossiers will appear here.
+              </p>
+              <div class="mt-6 flex flex-wrap gap-2.5 justify-center">
+                <a href="appointments.html" class="px-4 py-2 bg-[#0B3B2E] text-white text-xs font-semibold rounded-xl hover:bg-[#145C48] transition-colors shadow-sm">
+                  Open Appointments Ledger
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Quick Actions & Recent Enquiries -->
+          <div class="space-y-6">
+
+            <!-- Quick Actions Card -->
+            <div class="bg-white rounded-2xl border border-[#C9A45C]/25 shadow-sm p-5">
+              <h3 class="font-serif font-bold text-sm text-[#0B3B2E] mb-3">Quick Actions</h3>
+              <div class="space-y-2">
+                <a href="appointments.html" class="flex items-center justify-between p-3 rounded-xl bg-[#F7F3EA] hover:bg-[#EDE5D5] transition-all border border-[#C9A45C]/20 group">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-[#0B3B2E] text-[#C9A45C] flex items-center justify-center text-xs">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    </div>
+                    <div>
+                      <div class="text-xs font-bold text-[#0B3B2E] group-hover:text-[#C9A45C] transition-colors">View Appointments</div>
+                      <div class="text-[11px] text-[#52635B]">Review schedule & triage status</div>
+                    </div>
+                  </div>
+                  <span class="text-xs font-semibold text-[#0B3B2E]">&rarr;</span>
+                </a>
+
+                <a href="patients.html" class="flex items-center justify-between p-3 rounded-xl bg-[#F7F3EA] hover:bg-[#EDE5D5] transition-all border border-[#C9A45C]/20 group">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-[#0B3B2E] text-[#C9A45C] flex items-center justify-center text-xs">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    </div>
+                    <div>
+                      <div class="text-xs font-bold text-[#0B3B2E] group-hover:text-[#C9A45C] transition-colors">View Patients</div>
+                      <div class="text-[11px] text-[#52635B]">Patient directory and inquiries</div>
+                    </div>
+                  </div>
+                  <span class="text-xs font-semibold text-[#0B3B2E]">&rarr;</span>
+                </a>
+
+                <a href="settings.html" class="flex items-center justify-between p-3 rounded-xl bg-[#F7F3EA] hover:bg-[#EDE5D5] transition-all border border-[#C9A45C]/20 group">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-[#0B3B2E] text-[#C9A45C] flex items-center justify-center text-xs">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <div>
+                      <div class="text-xs font-bold text-[#0B3B2E] group-hover:text-[#C9A45C] transition-colors">Settings</div>
+                      <div class="text-[11px] text-[#52635B]">Clinic hours & contact details</div>
+                    </div>
+                  </div>
+                  <span class="text-xs font-semibold text-[#0B3B2E]">&rarr;</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Recent Enquiries Clean Zero State Card -->
+            <div class="bg-white rounded-2xl border border-[#C9A45C]/25 shadow-sm p-5">
+              <div class="flex items-center justify-between pb-3 border-b border-[#EDE5D5]">
+                <h3 class="font-serif font-bold text-sm text-[#0B3B2E]">Recent Enquiries</h3>
+                <span class="text-[10px] text-[#C9A45C] font-semibold uppercase">Real-Time</span>
+              </div>
+              <div class="py-8 text-center flex flex-col items-center justify-center">
+                <div class="w-12 h-12 rounded-full bg-[#F7F3EA] border border-[#C9A45C]/25 flex items-center justify-center text-[#52635B] mb-2.5">
+                  <svg class="w-6 h-6 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+                </div>
+                <div class="text-xs font-bold text-[#0B3B2E]">No enquiries yet</div>
+                <p class="text-[11px] text-[#52635B] max-w-xs mt-1">
+                  Incoming contact requests and consultation questions will show here.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- ROBUST FIREBASE INITIALIZATION & AUTH PROTECTION SCRIPT  -->
+  <!-- ======================================================== -->
+  <script>
+    // --- Mobile navigation drawer toggle ---
+    const toggleBtn = document.getElementById('mobile-menu-toggle');
+    const closeBtn = document.getElementById('mobile-menu-close');
+    const drawer = document.getElementById('mobile-drawer');
+
+    if (toggleBtn && drawer) {
+      toggleBtn.addEventListener('click', () => drawer.classList.remove('hidden'));
+    }
+    if (closeBtn && drawer) {
+      closeBtn.addEventListener('click', () => drawer.classList.add('hidden'));
+    }
+
+    // --- Exact Firebase Configuration for Premium Ayurveda Elite ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyBCWx719_qEDOiNrUAJ50cjxK-_5Wl89eo",
+      authDomain: "premium-ayurveda-elite.firebaseapp.com",
+      projectId: "premium-ayurveda-elite",
+      storageBucket: "premium-ayurveda-elite.firebasestorage.app",
+      messagingSenderId: "799315358227",
+      appId: "1:799315358227:web:4273ecd783992e49e5c5e6",
+      measurementId: "G-5EJ6H22WME"
+    };
+
+    let auth = null;
+
+    // --- Robust SDK Loader & Initializer ---
+    function waitForFirebaseSDK(timeout = 6000) {
+      return new Promise((resolve, reject) => {
+        const startTime = Date.now();
+        const check = () => {
+          if (typeof window.firebase !== 'undefined' && typeof window.firebase.auth === 'function') {
+            resolve(window.firebase);
+          } else if (Date.now() - startTime >= timeout) {
+            reject(new Error("Firebase SDK loading timeout"));
+          } else {
+            setTimeout(check, 50);
+          }
+        };
+        check();
+      });
+    }
+
+    function generateInitials(name) {
+      if (!name) return 'DA';
+      const clean = name.replace(/^Dr\.\s*/i, '').trim();
+      const parts = clean.split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      }
+      return clean.slice(0, 2).toUpperCase() || 'DA';
+    }
+
+    function updateDoctorDisplay(user) {
+      const displayName = user && user.displayName ? user.displayName : 'Dr. Aditya Navnath Shinde';
+      const email = user && user.email ? user.email : '';
+      const initials = generateInitials(displayName);
+
+      const desktopNameEl = document.getElementById('desktop-doctor-name');
+      const desktopAvatarEl = document.getElementById('desktop-doctor-avatar');
+      const topbarWelcomeEl = document.getElementById('topbar-welcome-text');
+      const bannerGreetingEl = document.getElementById('banner-greeting');
+
+      if (desktopNameEl) desktopNameEl.textContent = displayName;
+      if (desktopAvatarEl) desktopAvatarEl.textContent = initials;
+      if (topbarWelcomeEl) topbarWelcomeEl.textContent = `Welcome, ${displayName}`;
+      if (bannerGreetingEl) {
+        const firstName = displayName.replace(/^Dr\.\s*/i, '').split(' ')[0] || 'Aditya';
+        bannerGreetingEl.textContent = `Good morning, Dr. ${firstName}`;
+      }
+    }
+
+    async function handleAdminSignOut() {
+      try {
+        if (auth) {
+          await auth.signOut();
+        }
+      } catch (err) {
+        console.warn('Sign out exception:', err);
+      } finally {
+        window.location.href = 'login.html';
+      }
+    }
+
+    async function initDashboardAuth() {
+      const authOverlay = document.getElementById('auth-guard-overlay');
+
+      try {
+        const fb = await waitForFirebaseSDK();
+        if (!fb.apps || !fb.apps.length) {
+          fb.initializeApp(firebaseConfig);
+        }
+        auth = fb.auth();
+
+        // Listen for authentication changes
+        auth.onAuthStateChanged((user) => {
+          if (user) {
+            // Authenticated: populate doctor info and reveal dashboard
+            updateDoctorDisplay(user);
+            if (authOverlay) {
+              authOverlay.classList.add('opacity-0', 'pointer-events-none');
+              setTimeout(() => {
+                authOverlay.classList.add('hidden');
+              }, 300);
+            }
+          } else {
+            // Not authenticated: redirect to login.html
+            window.location.href = 'login.html';
+          }
+        });
+      } catch (err) {
+        console.error('Firebase Auth Guard failure:', err);
+        // If SDK fails to load or error occurs, redirect to login
+        window.location.href = 'login.html';
+      }
+    }
+
+    // Attach sign out event handlers
+    const sidebarLogoutBtn = document.getElementById('sidebar-logout-btn');
+    const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+
+    if (sidebarLogoutBtn) {
+      sidebarLogoutBtn.addEventListener('click', handleAdminSignOut);
+    }
+    if (mobileLogoutBtn) {
+      mobileLogoutBtn.addEventListener('click', handleAdminSignOut);
+    }
+
+    // Initialize once DOM is loaded
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initDashboardAuth);
+    } else {
+      initDashboardAuth();
+    }
+  </script>
+</body>
+</html>
